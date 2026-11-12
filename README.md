@@ -5,15 +5,15 @@
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.5%2B-orange.svg)](https://scikit-learn.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Pipeline integral de Machine Learning industrial y diagnóstico prescriptivo en dos etapas (*Two-Stage Pipeline*) desarrollado sobre el dataset **AI4I 2020 Predictive Maintenance Dataset** (UCI Machine Learning Repository)[cite: 1].
+Pipeline integral de Machine Learning industrial y diagnóstico prescriptivo en dos etapas (*Two-Stage Pipeline*) desarrollado sobre el dataset **AI4I 2020 Predictive Maintenance Dataset** (UCI Machine Learning Repository).
 
-El proyecto resuelve la anticipación al fallo en centros de mecanizado CNC mediante **ingeniería de variables físicas**, evaluación comparativa estricta entre modelos supervisados y detección de anomalías, y diagnóstico prescriptivo multi-etiqueta desacoplado con calibración automática de umbrales[cite: 1].
+El proyecto resuelve la anticipación al fallo en centros de mecanizado CNC mediante **ingeniería de variables físicas**, evaluación comparativa estricta entre modelos supervisados y detección de anomalías, y diagnóstico prescriptivo multi-etiqueta desacoplado con calibración automática de umbrales.
 
 ---
 
 ## 🎯 Arquitectura del Pipeline
 
-El sistema desacopla la detección binaria de paradas del diagnóstico de componentes mecánicos[cite: 1]:
+El sistema desacopla la detección binaria de paradas del diagnóstico de componentes mecánicos:
 
 ```mermaid
 flowchart TD
@@ -31,13 +31,13 @@ flowchart TD
 ```
 
 - **Fase 1 (Detección Binaria):** Clasificador de gradiente boosting por histogramas (`HistGradientBoostingClassifier(class_weight="balanced")`) evaluado sobre **PR-AUC** para mitigar el desbalance severo (3,39 % de paradas reales)[cite: 1].
-- **Fase 2 (Diagnóstico Prescriptivo Multi-Etiqueta):** Motor especialista activado exclusivamente sobre incidencias activas para identificar la causa raíz (`TWF`, `HDF`, `PWF`, `OSF`) mediante *Binary Relevance* y ajuste de umbrales por validación cruzada (`TunedThresholdClassifierCV`)[cite: 1].
+- **Fase 2 (Diagnóstico Prescriptivo Multi-Etiqueta):** Motor especialista activado exclusivamente sobre incidencias activas para identificar la causa raíz (`TWF`, `HDF`, `PWF`, `OSF`) mediante *Binary Relevance* y ajuste de umbrales por validación cruzada (`TunedThresholdClassifierCV`)
 
 ---
 
 ## ⚙️ Ingeniería de Características (Fundamento Físico)
 
-En lugar de delegar el aprendizaje en telemetría en bruto, se formularon analíticamente las magnitudes físicas que gobiernan la rotura en mecanizado[cite: 1]:
+En lugar de delegar el aprendizaje en telemetría en bruto, se formularon analíticamente las magnitudes físicas que gobiernan la rotura en mecanizado:
 
 **1. Diferencial Térmico ($\Delta T$)**
 
@@ -45,7 +45,7 @@ En lugar de delegar el aprendizaje en telemetría en bruto, se formularon analí
 \Delta T = T_{\text{process}} - T_{\text{air}}
 ```
 
-Aísla la eficiencia de disipación térmica del refrigerante, eliminando la colinealidad con la temperatura ambiental estacional ($r = 0{,}88$)[cite: 1, 2].
+Aísla la eficiencia de disipación térmica del refrigerante, eliminando la colinealidad con la temperatura ambiental estacional ($r = 0{,}88$).
 
 **2. Potencia Mecánica Neta ($P_{\text{mech}}$)**
 
@@ -53,7 +53,7 @@ Aísla la eficiencia de disipación térmica del refrigerante, eliminando la col
 P_{\text{mech}} = \tau \cdot \omega = \tau \cdot \left(\text{RPM} \cdot \frac{2\pi}{60}\right) \quad [\text{W}]
 ```
 
-Combina par torsor y régimen de giro en una magnitud energética escalar que detecta regímenes fuera de catálogo ($< 3.500\text{ W}$ o $> 9.000\text{ W}$)[cite: 1, 3].
+Combina par torsor y régimen de giro en una magnitud energética escalar que detecta regímenes fuera de catálogo ($< 3.500\text{ W}$ o $> 9.000\text{ W}$).
 
 **3. Factor de Sobreesfuerzo (`strain_factor`)**
 
@@ -61,10 +61,10 @@ Combina par torsor y régimen de giro en una magnitud energética escalar que de
 \text{Strain Factor} = \text{Torque} \times \text{Tool wear}
 ```
 
-Modela la fatiga acumulada en el filo de corte bajo tensión torsional, discriminando según los límites de rotura por variante de calidad (`L`, `M`, `H`)[cite: 1].
+Modela la fatiga acumulada en el filo de corte bajo tensión torsional, discriminando según los límites de rotura por variante de calidad (`L`, `M`, `H`).
 
 **4. Protocolo Anti-Leakage**  
-Exclusión estricta de identificadores (`UDI`, `Product ID`) y de los 5 indicadores de diagnóstico específico (`TWF`, `HDF`, `PWF`, `OSF`, `RNF`) durante el entrenamiento de la Fase 1[cite: 1].
+Exclusión estricta de identificadores (`UDI`, `Product ID`) y de los 5 indicadores de diagnóstico específico (`TWF`, `HDF`, `PWF`, `OSF`, `RNF`) durante el entrenamiento de la Fase 1.
 
 ---
 
@@ -85,7 +85,7 @@ Exclusión estricta de identificadores (`UDI`, `Product ID`) y de los 5 indicado
 ### 2. El Hallazgo Causal: ¿Por qué fracasa la Detección No Supervisada?
 
 Los métodos de detección de anomalías espaciales (**Isolation Forest**, **One-Class SVM**, **LOF**) colapsaron con un **PR-AUC máximo de 0.2584**[cite: 1].
-- **La Paradoja de la Densidad Nominal:** La fatiga mecánica y el desgaste progresivo de la herramienta ocurren dentro de rangos normales de velocidad, par y temperatura[cite: 1]. Por tanto, las roturas comparten el núcleo denso del espacio de sensores y no constituyen *outliers* geométricos[cite: 1].
+- **La Paradoja de la Densidad Nominal:** La fatiga mecánica y el desgaste progresivo de la herramienta ocurren dentro de rangos normales de velocidad, par y temperatura. Por tanto, las roturas comparten el núcleo denso del espacio de sensores y no constituyen *outliers* geométricos[cite: 1].
 
 ### 3. Fase 2: Diagnóstico Prescriptivo Multi-Etiqueta (Subconjunto de Fallos: 68 ciclos)
 
@@ -105,24 +105,24 @@ Al desacoplar el diagnóstico y evaluar exclusivamente sobre las máquinas en es
 ```text
 Predictive-Maintenance-AI4I-2020/
 ├── data/
-│   └── ai4i2020.csv                # Dataset industrial original (10.000 ciclos)[cite: 1]
+│   └── ai4i2020.csv                # Dataset industrial original (10.000 ciclos)
 ├── notebooks/
-│   └── pipeline_entrega.ipynb      # Notebook ejecutable con EDA, modelado y gráficos[cite: 1]
+│   └── pipeline_entrega.ipynb      # Notebook ejecutable con EDA, modelado y gráficos
 ├── src/
 │   ├── __init__.py[cite: 1]
-│   ├── features.py                 # Transformador reproducible de ingeniería física[cite: 1]
-│   └── models.py                   # Benchmark CV, detección de anomalías y diagnóstico[cite: 1]
-├── main.py                         # Punto de entrada de ejecución del pipeline[cite: 1]
-├── pyproject.toml                  # Definición del proyecto y dependencias[cite: 1]
-├── uv.lock                         # Lockfile determinista de paquetes[cite: 1]
-└── README.md                       # Documentación técnica del proyecto[cite: 1]
+│   ├── features.py                 # Transformador reproducible de ingeniería física
+│   └── models.py                   # Benchmark CV, detección de anomalías y diagnóstico
+├── main.py                         # Punto de entrada de ejecución del pipeline
+├── pyproject.toml                  # Definición del proyecto y dependencias
+├── uv.lock                         # Lockfile determinista de paquetes
+└── README.md                       # Documentación técnica del proyecto
 ```
 
 ---
 
 ## 🚀 Instalación y Reproducción
 
-Este proyecto utiliza **[uv](https://docs.astral.sh/uv/)** para garantizar una resolución determinista y ultrarrápida del entorno en **Python 3.14**[cite: 1].
+Este proyecto utiliza **[uv](https://docs.astral.sh/uv/)** para garantizar una resolución determinista y ultrarrápida del entorno en **Python 3.14**.
 
 ### 1. Clonar el repositorio
 ```bash
@@ -148,7 +148,7 @@ uv run jupyter notebook notebooks/pipeline_entrega.ipynb
 
 ## 🏭 Hoja de Ruta para Despliegue en Producción
 
-1. **Microservicio en Tiempo Real:** Empaquetar `IndustrialFeatureEngineer` junto con los modelos serializados en una API de baja latencia conectada al flujo de telemetría de la fresadora, ejecutando la Etapa 2 únicamente bajo demanda tras una alerta de la Etapa 1[cite: 1].
+1. **Microservicio en Tiempo Real:** Empaquetar `IndustrialFeatureEngineer` junto con los modelos serializados en una API de baja latencia conectada al flujo de telemetría de la fresadora, ejecutando la Etapa 2 únicamente bajo demanda tras una alerta de la Etapa 1.
 2. **Explicabilidad Local para el Operario:** Integrar gráficos explicativos (como valores SHAP / *Waterfall*) en el panel de mantenimiento para mostrar al técnico qué sensor exacto disparó la predicción en ese ciclo.
-3. **Control de *Data Drift* y Reentrenamiento:** Monitorizar las distribuciones de `mechanical_power_w` y `temp_diff_k` ante cambios de material mecanizado (ej. aluminio frente a acero templado) para activar reentrenamientos periódicos[cite: 1].
-4. **Sensorización Complementaria:** Incorporar sensores de vibración y sonido en el cabezal para mejorar la detección temprana del desgaste progresivo (`TWF`) y capturar anomalías actualmente no instrumentadas (`RNF`)[cite: 1].
+3. **Control de *Data Drift* y Reentrenamiento:** Monitorizar las distribuciones de `mechanical_power_w` y `temp_diff_k` ante cambios de material mecanizado (ej. aluminio frente a acero templado) para activar reentrenamientos periódicos.
+4. **Sensorización Complementaria:** Incorporar sensores de vibración y sonido en el cabezal para mejorar la detección temprana del desgaste progresivo (`TWF`) y capturar anomalías actualmente no instrumentadas (`RNF`).
